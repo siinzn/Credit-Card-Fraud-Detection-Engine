@@ -1,0 +1,3 @@
+# Credit Card Fraud Detection
+
+A Dataset with various data such as long and lat with times is used to detect any abnormalities in a transaction. Most of the dataset is non fraud, only about 5% is fraud. The plan is to use XGBoost to learn and predict fraud with the data with the help of Redis and Postgres will be used for logging(maybe not). Later hope to replace the redis part with C++ to increase performance
