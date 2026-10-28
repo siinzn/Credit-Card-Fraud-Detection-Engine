@@ -28,7 +28,7 @@ def temporal_split(test_df, combined_df):
     train = combined_df[combined_df['trans_date_trans_time'] < val_start]
     value = combined_df[(combined_df['trans_date_trans_time'] >= val_start) & (combined_df['trans_date_trans_time'] < test_start)]
     test = combined_df[combined_df['trans_date_trans_time'] >= test_start]
-
+    """
     #Sanity checks
     print(f"Min of train: {train['trans_date_trans_time'].min()}, Max of train: {train['trans_date_trans_time'].max()}")
     print(f"Min of value: {value['trans_date_trans_time'].min()}, Max of value: {value['trans_date_trans_time'].max()}")
@@ -39,6 +39,7 @@ def temporal_split(test_df, combined_df):
     print(f"Train fraud count: {(train['is_fraud'] == 1).sum()}")
     print(f"Value fraud count: {(value['is_fraud'] == 1).sum()}")
     print(f"Test fraud count: {(test['is_fraud'] == 1).sum()}")
+    """
 
     return(train,value,test)
 
