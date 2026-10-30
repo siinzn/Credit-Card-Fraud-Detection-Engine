@@ -4,6 +4,4 @@ from sklearn.metrics import average_precision_score, precision_recall_curve, roc
 def evaluate(y_true, y_score, threshold=None):
     PR_AUC = average_precision_score(y_true=y_true, y_score=y_score)
     ROC_AUC = roc_auc_score(y_true, y_score)
-        
-    print(f"PR_AUC: {PR_AUC}")
-    print(f"ROC_AUC: {ROC_AUC}\n")
+    return {"pr_auc": PR_AUC, "roc_auc": ROC_AUC}
