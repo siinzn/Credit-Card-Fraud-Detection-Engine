@@ -4,6 +4,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from src.training.evaluate import evaluate
 from xgboost import XGBClassifier 
+import math
 
 # logistic regression model
 
@@ -16,14 +17,14 @@ def save_results(results, val, model_name, extra_results=None):
     with result_file.open("a", encoding="utf-8") as file:
         legit_accuracy = 1 - val["is_fraud"].mean()
         file.write(
-            f"Model | {model_name}\n"
-            f"PR_AUC | {results['pr_auc']:.6f}\n"
-            f"ROC-AUC | {results['roc_auc']:.6f}\n"
-            f"Legit Accuracy | {legit_accuracy:.6f}\n"
+            f"Model - {model_name} | "
+            f"PR_AUC - {results['pr_auc']:.6f} | "
+            f"ROC-AUC - {results['roc_auc']:.6f}| "
+            f"Legit Accuracy - {legit_accuracy:.6f} | "
         )
         if extra_results:
             for name, value in extra_results.items():
-                file.write(f"{name} | {value}\n")
+                file.write(f"{name} - {value}")
         file.write("\n")
         
 def train_baseline(train, val):
@@ -56,7 +57,8 @@ def train_xgboost(train, val):
     training is stopping so it prevents overfitting and avoid building unwanted trees
     best_iteration - tells which tree numbner had the best val data performance
     """
-    xgb = XGBClassifier(objective="binary:logistic", early_stopping_rounds = 20)
+    neg_pos_ratio = (train['is_fraud'] == 0).sum() / (train['is_fraud'] == 1).sum()
+    xgb = XGBClassifier(objective="binary:logistic", early_stopping_rounds = 20, scale_pos_weight=math.sqrt(neg_pos_ratio), eval_metric="aucpr", n_estimators=1000)
     xgb.fit(X_train, Y_train, eval_set=[(X_val, Y_val)], verbose=False)
     score = xgb.predict_proba(X_val)[:,1] #[:,1] means - : - select every row, 1 - get the first index which is the fraud probability
     metrics = evaluate(Y_val, score)
@@ -76,12 +78,12 @@ if __name__ == "__main__":
 
     train, val, test = temporal_split(test_df=test_df, combined_df=combined_dataset)
     result_baseline = train_baseline(train=train, val=val)
-    save_results(results=result_baseline, val=val, model_name="Logistic Regression")
+    #save_results(results=result_baseline, val=val, model_name="Logistic Regression")
     result_xgboost = train_xgboost(train=train, val=val)
     save_results(
         results=result_xgboost["metrics"],
         val=val,
-        model_name="XGBoost",
+        model_name="XGBoost with scale_pos_weight",
         extra_results={
             "Best iteration": result_xgboost["best_iteration"]
         }
