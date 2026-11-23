@@ -1,5 +1,5 @@
 import pandas as pd
-from src.features import add_features
+from src.training.features import add_features
 import pytest
 
 
@@ -30,3 +30,30 @@ def test_amt_log():
     df = pd.DataFrame(data)
     result = add_features(df)
     assert result['amt_log'].iloc[0] == 0 and result['amt_log'].iloc[1] == pytest.approx(1.0)
+
+def test_hour_cyclic():
+    data = {
+    "trans_date_trans_time": [
+            "2020-01-01 00:00:00",
+            "2020-01-01 06:00:00",
+            "2020-01-01 12:00:00",
+        ],
+    }
+    df = pd.DataFrame(data=data)
+    result = add_features(df)
+    assert result['hour_sin'].iloc[0] == pytest.approx(0) and result['hour_cos'].iloc[0] == pytest.approx(1)
+    assert result['hour_sin'].iloc[1] == pytest.approx(1) and result['hour_cos'].iloc[1] == pytest.approx(0)
+    assert result['hour_cos'].iloc[2] == pytest.approx(-1)
+
+def test_distance():
+    data = {
+        "lat": [40.7128, 51.5074, 48.8566],
+        "long": [-74.0060, -0.1278, 2.3522],
+        "merch_lat": [40.7138, 51.5174, 48.8666],
+        "merch_long": [-74.0160, -0.1378, 2.3622],
+    }
+    df=pd.DataFrame(data)
+    result=add_features(df)
+    assert result["dist_km"].iloc[0] == pytest.approx(0.850143)
+    assert result["dist_km"].iloc[1] == pytest.approx(1.309703)
+    assert result["dist_km"].iloc[2] == pytest.approx(1.331004)
