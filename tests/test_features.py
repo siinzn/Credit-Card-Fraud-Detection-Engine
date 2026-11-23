@@ -1,5 +1,6 @@
 import pandas as pd
 from src.features import add_features
+import pytest
 
 
 def test_add_features_returns_same_length():
@@ -21,3 +22,11 @@ def test_add_features_returns_same_length():
     df = pd.DataFrame(data)
     result = add_features(df)
     assert len(result) == len(df), "add_features changed the row count"
+
+def test_amt_log():
+    data = {
+        "amt": [0, 1.718281828]
+    }
+    df = pd.DataFrame(data)
+    result = add_features(df)
+    assert result['amt_log'].iloc[0] == 0 and result['amt_log'].iloc[1] == pytest.approx(1.0)
