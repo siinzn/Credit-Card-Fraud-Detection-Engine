@@ -3,6 +3,7 @@ from src.training.dataset import temporal_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from src.training.evaluate import evaluate
+from src.training.features import add_features, apply_category_map, build_category_map
 from xgboost import XGBClassifier 
 import math
 
@@ -12,6 +13,15 @@ RAW_FEATURES = [
     'amt', 'city_pop', 'lat', 'long', 'merch_lat', 'merch_long'
 ]
 
+FEATURES_RAW_PLUS_DERIVED = [
+    'amt', 'city_pop', 'lat', 'long', 'merch_lat', 'merch_long',
+    'category_code', 'amt_log', 'hour_sin', 'hour_cos', 'dist_km', 'age'
+]
+
+FEATURES_DERIVED_ONLY = [
+    'category_code', 'amt_log', 'hour_sin', 'hour_cos', 'dist_km', 'age'
+]
+
 def save_results(results, val, model_name, extra_results=None):
     result_file = root_dir / "results.md"
     with result_file.open("a", encoding="utf-8") as file:
@@ -19,12 +29,12 @@ def save_results(results, val, model_name, extra_results=None):
         file.write(
             f"Model - {model_name} | "
             f"PR_AUC - {results['pr_auc']:.6f} | "
-            f"ROC-AUC - {results['roc_auc']:.6f}| "
-            f"Legit Accuracy - {legit_accuracy:.6f} | "
+            f"ROC-AUC - {results['roc_auc']:.6f} | "
+            f"Legit Accuracy - {legit_accuracy:.6f}"
         )
         if extra_results:
             for name, value in extra_results.items():
-                file.write(f"{name} - {value}")
+                file.write(f" | {name} - {value}")
         file.write("\n")
         
 def train_baseline(train, val):
@@ -44,11 +54,11 @@ def train_baseline(train, val):
     score = clf.predict_proba(X_val_scaled)[:, 1]
     return evaluate(Y_val, score)
 
-def train_xgboost(train, val):
-    X_train = train[RAW_FEATURES]
+def train_xgboost(train, val, features):
+    X_train = train[features]
     Y_train = train['is_fraud']
 
-    X_val = val[RAW_FEATURES]
+    X_val = val[features]
     Y_val = val['is_fraud']
 
     """
@@ -76,15 +86,26 @@ if __name__ == "__main__":
     test_df = load_dataset(filepath=test_file_path)
     combined_dataset = load_dataset(filepath=combined_dataset_path)
 
+    combined_dataset = add_features(combined_dataset)
     train, val, test = temporal_split(test_df=test_df, combined_df=combined_dataset)
+    category_mapping = build_category_map(train)
+    train = apply_category_map(train, category_mapping)
+    val = apply_category_map(val, category_mapping)
+    test = apply_category_map(test, category_mapping)
+
     result_baseline = train_baseline(train=train, val=val)
     #save_results(results=result_baseline, val=val, model_name="Logistic Regression")
-    result_xgboost = train_xgboost(train=train, val=val)
-    save_results(
-        results=result_xgboost["metrics"],
-        val=val,
-        model_name="XGBoost with scale_pos_weight",
-        extra_results={
-            "Best iteration": result_xgboost["best_iteration"]
-        }
-    )
+    for feature_set_name, features in (
+        ("raw_plus_derived", FEATURES_RAW_PLUS_DERIVED),
+        ("derived_only", FEATURES_DERIVED_ONLY),
+    ):
+        result_xgboost = train_xgboost(train=train, val=val, features=features)
+        save_results(
+            results=result_xgboost["metrics"],
+            val=val,
+            model_name="XGBoost with scale_pos_weight",
+            extra_results={
+                "Best iteration": result_xgboost["best_iteration"],
+                "Feature set": feature_set_name,
+            }
+        )

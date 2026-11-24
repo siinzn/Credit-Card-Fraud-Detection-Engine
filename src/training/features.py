@@ -6,6 +6,7 @@ def add_features(df):
     df = amt_log(df)
     df = hour_cyclic(df)
     df = distance(df)
+    df = age(df)
     return df
 
 def amt_log(df):
@@ -31,3 +32,19 @@ def distance(df):
     df['dist_km'] = 2 * 6371 * np.arcsin(np.sqrt(a))
     return df 
 
+def age(df):
+    df['trans_date_trans_time'] = pd.to_datetime(df['trans_date_trans_time'])
+    df['dob'] = pd.to_datetime(df['dob'])
+    df['age'] = (df['trans_date_trans_time'] - df['dob']).dt.days / 365.25
+    return df
+
+def build_category_map(train_df):
+    categories = sorted(train_df['category'].dropna().unique())
+    return {
+        category: idx for idx, category in enumerate(categories)
+    }
+
+def apply_category_map(df, mapping):
+    df['category_code'] = df['category'].map(mapping)
+    df['category_code'] = df['category_code'].fillna(-1.0)
+    return df

@@ -7,3 +7,5 @@ Model - XGBoost with scale_pos_weight | PR_AUC - 0.292143 | ROC-AUC - 0.963848| 
 Model - XGBoost with scale_pos_weight | PR_AUC - 0.259790 | ROC-AUC - 0.957345| Legit Accuracy - 0.994151 | Best iteration - 0 #no scale_pos_weight but with new setup
 
 ## XGBoost Model with sqrt of scale_pos_weight wins since it has the highest PR_AUC. Will be used further. 
+Model - XGBoost with scale_pos_weight | PR_AUC - 0.898849 | ROC-AUC - 0.998056| Legit Accuracy - 0.994151 | Best iteration - 36Feature set - raw_plus_derived
+Model - XGBoost with scale_pos_weight | PR_AUC - 0.904356 | ROC-AUC - 0.998417| Legit Accuracy - 0.994151 | Best iteration - 47Feature set - derived_only
