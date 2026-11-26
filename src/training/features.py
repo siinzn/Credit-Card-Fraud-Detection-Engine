@@ -48,3 +48,10 @@ def apply_category_map(df, mapping):
     df['category_code'] = df['category'].map(mapping)
     df['category_code'] = df['category_code'].fillna(-1.0)
     return df
+
+
+def add_velocity_features(df):
+    df = df.sort_values(by='unix_time', ascending=False)
+    assert df['unix_time'].is_monotonic_increasing and df.index.equals(pd.RangeIndex(len(df))), "DataFrame must be sorted by unix_time ascending with a clean 0..N-1 index"
+    df = df.groupby("cc_num")
+    return df
