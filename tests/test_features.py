@@ -7,7 +7,8 @@ from src.training.features import (
     build_category_map,
     distance,
     hour_cyclic,
-    secs_since_last
+    secs_since_last,
+    amt_ratio
 )
 import pytest
 
@@ -133,3 +134,17 @@ def test_secs_since_last():
         5, 3, 4.5, 3, 5,
         5, 4.5, 3,
     ]
+
+def test_amt_ratio():
+    data = {
+        "cc_num": [1001, 1002, 1003, 1004] * 3,
+        "amt": [10, 20, 5, 30, 20, 10, 15, 30, 30, 40, 25, 60],
+    }
+    df = pd.DataFrame(data)
+    result = amt_ratio(df)
+    print(result)
+    assert result["amt_ratio"].tolist() == pytest.approx([
+        1, 1, 1, 1,
+        2, 0.5, 3, 1,
+        2, 8 / 3, 2.5, 2,
+    ])

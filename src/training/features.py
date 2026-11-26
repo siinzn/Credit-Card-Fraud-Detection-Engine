@@ -67,7 +67,11 @@ def secs_since_last(df):
     return df
 
 def amt_ratio(df):
-    df = df.groupby("cc_num")
+    amt_sum = df.groupby("cc_num")['amt'].cumsum()
+    amt_count = df.groupby("cc_num")['amt'].cumcount()
+    earlier_total = amt_sum - df['amt']
+    earlier_mean = earlier_total / amt_count
+    df['amt_ratio'] = np.where((earlier_total == 0) | (amt_count == 0), 1.0, df['amt'] / earlier_mean)
     return df
 
 def txn_count_1h(df):
