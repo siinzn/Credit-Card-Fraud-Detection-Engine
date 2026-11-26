@@ -49,9 +49,32 @@ def apply_category_map(df, mapping):
     df['category_code'] = df['category_code'].fillna(-1.0)
     return df
 
-
 def add_velocity_features(df):
-    df = df.sort_values(by='unix_time', ascending=False)
     assert df['unix_time'].is_monotonic_increasing and df.index.equals(pd.RangeIndex(len(df))), "DataFrame must be sorted by unix_time ascending with a clean 0..N-1 index"
+    #seconds since last feature
+    secs_since_last(df)
+    #amount by mean of previous amounts
+    amt_ratio(df)
+    #transactions in the past 1h
+    txn_count_1h(df)
+    #transactions in the past 24h
+    txn_count_24h(df)
+    return df
+
+def secs_since_last(df):
+    df['secs_since_last'] = df.groupby("cc_num")['unix_time'].diff()
+    df['secs_since_last'] = df['secs_since_last'].fillna(-1)
+    return df
+
+def amt_ratio(df):
     df = df.groupby("cc_num")
     return df
+
+def txn_count_1h(df):
+    df = df.groupby("cc_num")
+    return df
+
+def txn_count_24h(df):
+    df = df.groupby("cc_num")
+    return df
+

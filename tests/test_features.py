@@ -7,6 +7,7 @@ from src.training.features import (
     build_category_map,
     distance,
     hour_cyclic,
+    secs_since_last
 )
 import pytest
 
@@ -111,3 +112,24 @@ def test_apply_mapping():
     }
     result = apply_category_map(df, mapping)
     assert result["category_code"].tolist() == [1.0, 0.0, -1.0]
+
+def test_secs_since_last():
+    data = {
+        "cc_num": [
+            1001, 1002, 1003, 1004,
+            1001, 1003, 1002, 1003, 1004,
+            1001, 1002, 1004,
+        ],
+        "unix_time": [
+            0, 1, 2, 3,
+            5, 5, 5.5, 8, 8,
+            10, 10, 11,
+        ],
+    }
+    df = pd.DataFrame(data)
+    result = secs_since_last(df)
+    assert result["secs_since_last"].tolist() == [
+        -1, -1, -1, -1,
+        5, 3, 4.5, 3, 5,
+        5, 4.5, 3,
+    ]
