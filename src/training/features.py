@@ -56,9 +56,9 @@ def add_velocity_features(df):
     #amount by mean of previous amounts
     amt_ratio(df)
     #transactions in the past 1h
-    txn_count_1h(df)
+    txn_count(df,1)
     #transactions in the past 24h
-    txn_count_24h(df)
+    txn_count(df,24)
     return df
 
 def secs_since_last(df):
@@ -74,11 +74,17 @@ def amt_ratio(df):
     df['amt_ratio'] = np.where((earlier_total == 0) | (amt_count == 0), 1.0, df['amt'] / earlier_mean)
     return df
 
-def txn_count_1h(df):
-    df = df.groupby("cc_num")
-    return df
-
-def txn_count_24h(df):
-    df = df.groupby("cc_num")
+def txn_count(df, hours):
+    #rolling returns the counts in card-by-card order with timestamp labels, so you rebuild the real row numbers in that same order and pair them with the counts.
+    df["trans_date_trans_time"] = pd.to_datetime(df["trans_date_trans_time"])
+    # rolling creates a sliding window per card, closed=left excludes current row, window is [t - hours, t)
+    rolling_counts = (
+        df.groupby("cc_num")
+          .rolling(f"{hours}h", on="trans_date_trans_time", closed="left")["amt"]
+          .count()
+    )
+    row_order = df.sort_values("cc_num", kind="stable").index
+    counts = pd.Series(rolling_counts.values, index=row_order)
+    df[f"txn_count_{hours}h"] = counts.fillna(0)
     return df
 
